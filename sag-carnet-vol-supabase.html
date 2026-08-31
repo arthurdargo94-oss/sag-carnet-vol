@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SAG — Carnet de vol</title>
+<style>
+  :root{
+    --navy-900:#0B1420;
+    --navy-800:#101C2C;
+    --navy-700:#16283D;
+    --navy-600:#1E3A5F;
+    --steel:#2C4A6E;
+    --gold:#C6A15B;
+    --gold-dim:#8C7440;
+    --ink:#E8ECEF;
+    --ink-dim:#9CB0C4;
+    --red:#8B2E2E;
+    --line:rgba(198,161,91,0.25);
+    font-family:"Inter","IBM Plex Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy-900);color:var(--ink);}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 20px 60px;}
+  .masthead{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:22px;}
+  .crest{width:46px;height:46px;flex:none;}
+  .masthead h1{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:17px;letter-spacing:0.03em;margin:0;color:var(--gold);}
+  .masthead p{margin:2px 0 0;font-size:12px;color:var(--ink-dim);letter-spacing:0.04em;}
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--navy-800);border:1px solid var(--line);border-radius:6px;padding:3px;}
+  .tab{flex:1;text-align:center;padding:9px 10px;font-size:13px;color:var(--ink-dim);cursor:pointer;border-radius:4px;user-select:none;}
+  .tab.active{background:var(--navy-600);color:var(--ink);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card-form{background:var(--navy-800);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:22px;}
+  .card-form h2{font-size:13px;font-weight:600;color:var(--gold);margin:0 0 12px;letter-spacing:0.02em;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11px;color:var(--ink-dim);}
+  .field input, .field select{background:var(--navy-900);border:1px solid var(--steel);color:var(--ink);border-radius:5px;padding:8px 9px;font-size:13px;font-family:inherit;}
+  .field input:focus, .field select:focus{outline:none;border-color:var(--gold-dim);}
+  .btn{background:transparent;border:1px solid var(--gold-dim);color:var(--gold);border-radius:5px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit;}
+  .btn:hover{background:rgba(198,161,91,0.08);}
+  .btn.small{padding:5px 10px;font-size:12px;}
+  .err{color:#E08A8A;font-size:12px;margin-top:4px;display:none;}
+
+  .idcard{background:linear-gradient(180deg,var(--navy-700),var(--navy-800));border:1px solid var(--gold-dim);border-radius:10px;padding:16px 18px;margin-bottom:14px;position:relative;}
+  .idcard .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px;}
+  .idcard .unit{font-size:10px;letter-spacing:0.08em;color:var(--ink-dim);}
+  .idcard .badgeword{font-size:11px;color:var(--gold);border:1px solid var(--gold-dim);padding:2px 8px;border-radius:20px;}
+  .idcard .body{display:flex;gap:14px;align-items:center;}
+  .idcard .photo{width:56px;height:56px;border-radius:50%;background:var(--navy-600);border:1px solid var(--steel);flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gold);font-weight:600;}
+  .idcard .info p{margin:0 0 3px;font-size:12px;color:var(--ink-dim);}
+  .idcard .info .name{font-size:16px;color:var(--ink);font-weight:600;margin-bottom:2px;}
+  .idcard .info .grade{color:var(--gold);}
+  .idcard .foot{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim);}
+  .status-pill{font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--steel);}
+  .status-Stagiaire{color:#C9B26B;border-color:#8C7440;}
+  .status-Confirme{color:#7FB6A6;border-color:#3F6E5C;}
+  .status-Instructeur{color:#D08A6A;border-color:#8C543A;}
+
+  .flight-select{margin-bottom:16px;}
+  .flight-entry{background:var(--navy-800);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px;}
+  .flight-entry .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .flight-entry .head .mission{font-size:13px;font-weight:600;color:var(--ink);}
+  .flight-entry .head .meta{font-size:11px;color:var(--ink-dim);}
+  .radio-log{border-top:1px solid var(--line);margin-top:8px;padding-top:8px;}
+  .radio-line{display:flex;gap:8px;font-size:12px;padding:3px 0;color:var(--ink-dim);font-family:"IBM Plex Mono",monospace;}
+  .radio-line .t{color:var(--gold-dim);flex:none;width:44px;}
+  .radio-empty{font-size:12px;color:var(--ink-dim);font-style:italic;}
+  .add-radio{display:flex;gap:6px;margin-top:8px;}
+  .add-radio input{flex:1;background:var(--navy-900);border:1px solid var(--steel);color:var(--ink);border-radius:5px;padding:6px 8px;font-size:12px;font-family:inherit;}
+
+  .empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:24px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <svg class="crest" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="22" fill="none" stroke="#C6A15B" stroke-width="1.5"/>
+      <path d="M14 28 L24 14 L34 28" fill="none" stroke="#C6A15B" stroke-width="1.5"/>
+      <line x1="24" y1="14" x2="24" y2="32" stroke="#C6A15B" stroke-width="1.5"/>
+      <line x1="17" y1="24" x2="31" y2="24" stroke="#C6A15B" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <h1>Section aérienne de la gendarmerie</h1>
+      <p>Registre des personnels navigants</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="cartes">Cartes pilotes</div>
+    <div class="tab" data-tab="carnet">Carnet de vol</div>
+  </div>
+
+  <div class="panel active" id="panel-cartes">
+    <div class="card-form">
+      <h2>Nouvelle fiche pilote</h2>
+      <div class="field-row">
+        <div class="field"><label>Nom</label><input id="p-nom" placeholder="Nom du pilote"/></div>
+        <div class="field"><label>Matricule</label><input id="p-mat" placeholder="ex: SAG-014"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Grade</label><input id="p-grade" placeholder="ex: MDL"/></div>
+        <div class="field"><label>Statut</label>
+          <select id="p-statut">
+            <option>Stagiaire</option>
+            <option>Confirme</option>
+            <option>Instructeur</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date d'affectation</label><input id="p-date" type="date"/></div>
+        <div class="field"></div>
+      </div>
+      <div class="err" id="p-err">Renseigne au moins le nom et le matricule.</div>
+      <button class="btn" onclick="addPilot()">Ajouter la fiche</button>
+    </div>
+    <div id="pilot-list"></div>
+  </div>
+
+  <div class="panel" id="panel-carnet">
+    <div class="flight-select">
+      <div class="field">
+        <label style="font-size:11px;color:var(--ink-dim);">Pilote concerné</label>
+        <select id="flight-pilot"></select>
+      </div>
+    </div>
+
+    <div class="card-form">
+      <h2>Nouvelle entrée de vol</h2>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input id="f-date" type="date"/></div>
+        <div class="field"><label>Type de mission</label><input id="f-type" placeholder="ex: Poursuite, patrouille, recherche"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Durée (min)</label><input id="f-duree" type="number" min="0" placeholder="ex: 25"/></div>
+        <div class="field"><label>Zone / secteur</label><input id="f-zone" placeholder="ex: Sandy Shores"/></div>
+      </div>
+      <div class="err" id="f-err">Sélectionne un pilote et renseigne au moins la date et la mission.</div>
+      <button class="btn" onclick="addFlight()">Enregistrer le vol</button>
+    </div>
+
+    <div id="flight-list"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://ytzoncijttoysgnurzfr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_znm4OCkjfRt9w4Mx8tf-MQ_rwsbtzD-";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let pilots = [];
+let flights = [];
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+function initials(name){
+  return name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+async function loadAll(){
+  try{
+    const { data, error } = await supabaseClient
+      .from('pilots')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if(error) throw error;
+    pilots = (data || []).map(p => ({
+      id: String(p.id),
+      nom: p.nom,
+      mat: p.matricule,
+      grade: p.grade || '',
+      statut: p.statut || 'Stagiaire',
+      date: p.date_affectation || ''
+    }));
+  }catch(e){
+    console.error('Erreur chargement pilotes:', e);
+    pilots = [];
+  }
+
+  try{
+    const { data, error } = await supabaseClient
+      .from('flights')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if(error) throw error;
+    flights = (data || []).map(f => ({
+      id: String(f.id),
+      pilotId: String(f.pilot_id),
+      date: f.date_vol,
+      type: f.type_mission,
+      duree: f.duree == null ? '' : String(f.duree),
+      zone: f.zone || '',
+      radio: []
+    }));
+  }catch(e){
+    console.error('Erreur chargement vols:', e);
+    flights = [];
+  }
+
+  // Charger toutes les communications radio liées aux vols.
+  try{
+    const { data, error } = await supabaseClient
+      .from('radio_logs')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if(error) throw error;
+
+    (data || []).forEach(r => {
+      const flight = flights.find(f => f.id === String(r.flight_id));
+      if(flight){
+        flight.radio.push({
+          id: String(r.id),
+          time: r.heure,
+          text: r.message
+        });
+      }
+    });
+  }catch(e){
+    console.error('Erreur chargement communications:', e);
+  }
+
+  renderPilots();
+  renderPilotSelect();
+  renderFlights();
+}
+
+async function addPilot(){
+  const nom = document.getElementById('p-nom').value.trim();
+  const mat = document.getElementById('p-mat').value.trim();
+  const grade = document.getElementById('p-grade').value.trim();
+  const statut = document.getElementById('p-statut').value;
+  const date = document.getElementById('p-date').value;
+  const err = document.getElementById('p-err');
+
+  if(!nom || !mat){
+    err.style.display = 'block';
+    return;
+  }
+
+  err.style.display = 'none';
+
+  try{
+    const { data, error } = await supabaseClient
+      .from('pilots')
+      .insert([{
+        nom,
+        matricule: mat,
+        grade: grade || null,
+        statut,
+        date_affectation: date || null
+      }])
+      .select()
+      .single();
+
+    if(error) throw error;
+
+    pilots.push({
+      id: String(data.id),
+      nom: data.nom,
+      mat: data.matricule,
+      grade: data.grade || '',
+      statut: data.statut,
+      date: data.date_affectation || ''
+    });
+
+    document.getElementById('p-nom').value='';
+    document.getElementById('p-mat').value='';
+    document.getElementById('p-grade').value='';
+    document.getElementById('p-date').value='';
+
+    renderPilots();
+    renderPilotSelect();
+  }catch(e){
+    console.error(e);
+    err.textContent = 'Erreur lors de l’enregistrement du pilote.';
+    err.style.display = 'block';
+  }
+}
+
+async function addFlight(){
+  const pilotId = document.getElementById('flight-pilot').value;
+  const date = document.getElementById('f-date').value;
+  const type = document.getElementById('f-type').value.trim();
+  const duree = document.getElementById('f-duree').value;
+  const zone = document.getElementById('f-zone').value.trim();
+  const err = document.getElementById('f-err');
+
+  if(!pilotId || !date || !type){
+    err.style.display = 'block';
+    return;
+  }
+
+  err.style.display = 'none';
+
+  try{
+    const { data, error } = await supabaseClient
+      .from('flights')
+      .insert([{
+        pilot_id: Number(pilotId),
+        date_vol: date,
+        type_mission: type,
+        duree: duree === '' ? null : Number(duree),
+        zone: zone || null
+      }])
+      .select()
+      .single();
+
+    if(error) throw error;
+
+    flights.unshift({
+      id: String(data.id),
+      pilotId: String(data.pilot_id),
+      date: data.date_vol,
+      type: data.type_mission,
+      duree: data.duree == null ? '' : String(data.duree),
+      zone: data.zone || '',
+      radio: []
+    });
+
+    document.getElementById('f-type').value='';
+    document.getElementById('f-duree').value='';
+    document.getElementById('f-zone').value='';
+    renderFlights();
+  }catch(e){
+    console.error(e);
+    err.textContent = 'Erreur lors de l’enregistrement du vol.';
+    err.style.display = 'block';
+  }
+}
+
+async function addRadio(flightId){
+  const input = document.getElementById('input-'+flightId);
+  const text = input.value.trim();
+  if(!text) return;
+
+  const now = new Date();
+  const time = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+
+  try{
+    const { data, error } = await supabaseClient
+      .from('radio_logs')
+      .insert([{
+        flight_id: Number(flightId),
+        heure: time,
+        message: text
+      }])
+      .select()
+      .single();
+
+    if(error) throw error;
+
+    const f = flights.find(x=>x.id===flightId);
+    if(f){
+      f.radio.push({
+        id: String(data.id),
+        time: data.heure,
+        text: data.message
+      });
+    }
+
+    input.value='';
+    renderFlights();
+  }catch(e){
+    console.error(e);
+    alert('Impossible d’enregistrer la communication radio.');
+  }
+}
+
+document.getElementById('flight-pilot').addEventListener('change', renderFlights);
+
+document.getElementById('p-date').value = new Date().toISOString().slice(0,10);
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+loadAll();
+</script>
+</body>
+</html>
